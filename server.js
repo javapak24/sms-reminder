@@ -52,4 +52,31 @@ app.post('/reminders', async (req, res) => {
       .send({ success: false, message: 'Failed to schedule reminder' });
   }
 });
-ß;
+
+// Cron job to check and send reminders every minute
+cron.schedule('* * * * *', async () => {
+  const now = new Date();
+  const reminders = await Reminder.find({ sendTime: { $lte: now } });
+
+  reminders.forEach(async (reminder) => {
+    try {
+      // Send SMS
+      await client.messages.create({
+        body: reminder.message,
+        from: twilioPhoneNumber,
+        to: reminder.phone,
+      });
+
+      console.log(`Reminder sent to ${reminder.phone}`);
+
+      // Delete reminder after sending
+      await Reminder.deleteOne({ _id: reminder._id });
+    } catch (error) {
+      console.error(`Failed to send reminder to ${reminder.phone}:`, error);
+    }
+  });
+});
+
+app.listen(port, () =>
+  console.log(`Server running on http://localhost:${port}`)
+);
