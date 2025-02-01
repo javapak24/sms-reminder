@@ -9,6 +9,9 @@ const cron = require('node-cron'); // For scheduling tasks
 const app = express();
 const port = 3000;
 
+const cors = require('cors');
+app.use(cors());
+
 app.use(bodyParser.json());
 
 // Twilio setup
@@ -21,7 +24,8 @@ const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 const client = require('twilio')(accountSid, authToken);
 
 // MongoDB setup
-const mongoURI = 'mongodb+srv://java:passw0rd@cluster0.hzurcpu.mongodb.net/';
+const mongoURI =
+  'mongodb+srv://java:passw0rd@cluster0.hzurcpu.mongodb.net/sms_reminder';
 mongoose
   .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
@@ -37,6 +41,11 @@ const reminderSchema = new mongoose.Schema({
 const Reminder = mongoose.model('Reminder', reminderSchema);
 
 // Routes
+
+app.get('/', (req, res) => {
+  res.send('Hello! Your server is running successfully.');
+});
+
 app.post('/reminders', async (req, res) => {
   const { phone, message, sendTime } = req.body;
 
